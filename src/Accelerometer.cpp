@@ -2,8 +2,17 @@
 
 #include "Arduino.h"
 #include "Accelerometer.h"
+#include "Filter.h"
 
-static float Accel_MG_LSB = 0.002F;   // 1, 2, 4 or 12 mg per lsb
+#define ADDRESS_ACCEL                   (0x32 >> 1)         // 0011001x
+#define CALIBRATION_STEPS               50
+
+#define REGISTER_ACCEL_CTRL_REG1_A      0x20
+#define REGISTER_ACCEL_CTRL_REG4_A      0x23
+#define REGISTER_ACCEL_CTRL_REG4_A      0x23
+#define REGISTER_ACCEL_OUT_X_L_A        0x28
+
+#define Accel_MG_LSB                    0.002f              // 1, 2, 4 or 12 mg per lsb
 
 void Accelerometer::write8(uint8_t address, uint8_t reg, uint8_t value)
 {
@@ -28,7 +37,7 @@ uint8_t Accelerometer::read8(uint8_t address, uint8_t reg)
     return value;
 }
 
-uint8_t Accelerometer::initAccelerometer()
+uint8_t Accelerometer::init()
 {
     // Enable I2C
     Wire.begin();
@@ -47,7 +56,7 @@ uint8_t Accelerometer::initAccelerometer()
     return 1;
 }
 
-void Accelerometer::readAccelerometer()
+void Accelerometer::read()
 {
     // Read the accelerometer
     Wire.beginTransmission((uint8_t)ADDRESS_ACCEL);
@@ -74,9 +83,13 @@ void Accelerometer::readAccelerometer()
     accelData.x -= calibrateData.x;
     accelData.y -= calibrateData.y;
     accelData.z -= calibrateData.z;
+
+    x.addValue(accelData.x);
+    y.addValue(accelData.y);
+    z.addValue(accelData.z);
 }
 
-void Accelerometer::calibrateAccelerometer()
+void Accelerometer::calibrate()
 {
     delay(100);
 
@@ -88,7 +101,7 @@ void Accelerometer::calibrateAccelerometer()
     cZ = 0;
 
     for (i = 0; i < CALIBRATION_STEPS; i++) {
-        readAccelerometer();
+        read();
         cX += accelData.x;
         cY += accelData.y;
         cZ += accelData.z;

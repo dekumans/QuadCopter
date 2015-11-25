@@ -2,24 +2,29 @@
 #include "Led.h"
 #include "BatteryMonitor.h"
 #include "Accelerometer.h"
-
-#define FILTER_SIZE 25
+#include "Magnetometer.h"
 
 Accelerometer accel;
-
-AccelData filteredData;
-AccelData filter[FILTER_SIZE];
+Magnetometer mag;
 
 void initSensors()
 {
-    if(!accel.initAccelerometer())
+    if(!accel.init())
     {
         /* There was a problem detecting the LSM303 ... check your connections */
         Serial.println(F("Ooops, no LSM303 (Accel) detected ... Check your wiring!"));
         while(1);
     }
 
-    accel.calibrateAccelerometer();
+    if(!mag.init())
+    {
+        /* There was a problem detecting the LSM303 ... check your connections */
+        Serial.println(F("Ooops, no LSM303 (Mag) detected ... Check your wiring!"));
+        while(1);
+    }
+
+    accel.calibrate();
+    mag.calibrate();
 }
 
 void printBatteryLevels() {
@@ -31,39 +36,22 @@ void printBatteryLevels() {
     Serial.println(levels[2], DEC);
 }
 
-void printAccelData() {
-    Serial.print("Ax: ");
-    Serial.print(accel.accelData.x, DEC);
-    Serial.print(" Ay: ");
-    Serial.print(accel.accelData.y, DEC);
-    Serial.print(" Az: ");
-    Serial.println(accel.accelData.z, DEC);
+void printMagData() {
+    Serial.print("Mx: ");
+    Serial.print(mag.magData.x, DEC);
+    Serial.print(" My: ");
+    Serial.print(mag.magData.y, DEC);
+    Serial.print(" Mz: ");
+    Serial.println(mag.magData.z, DEC);
 }
 
 void printFilteredData() {
     Serial.print("Fx: ");
-    Serial.print(filteredData.x, DEC);
+    Serial.print(accel.x.getMean(), DEC);
     Serial.print(" Fy: ");
-    Serial.print(filteredData.y, DEC);
+    Serial.print(accel.y.getMean(), DEC);
     Serial.print(" Fz: ");
-    Serial.println(filteredData.z, DEC);
-}
-
-void calculateFilteredData() {
-    filteredData.x = 0;
-    filteredData.y = 0;
-    filteredData.z = 0;
-
-    int j;
-    for (j = 0; j < FILTER_SIZE; j++) {
-        filteredData.x += filter[j].x;
-        filteredData.y += filter[j].y;
-        filteredData.z += filter[j].z;
-    }
-
-    filteredData.x /= FILTER_SIZE;
-    filteredData.y /= FILTER_SIZE;
-    filteredData.z /= FILTER_SIZE;
+    Serial.println(accel.z.getMean(), DEC);
 }
 
 void setup()
@@ -79,18 +67,15 @@ void setup()
 int i = 0;
 void loop()
 {
-    if (i == FILTER_SIZE) {
-        calculateFilteredData();
-        printFilteredData();
+    if (i > 100) {
+        printMagData();
         i = 0;
     }
 
-    accel.readAccelerometer();
-    filter[i].x = accel.accelData.x;
-    filter[i].y = accel.accelData.y;
-    filter[i].z = accel.accelData.z;
+    accel.read();
+    mag.read();
 
     i++;
-    delay(4);
+    delay(2);
 }
 
