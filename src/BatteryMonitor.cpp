@@ -1,13 +1,10 @@
-#include <avr/interrupt.h>
-#include <stdint.h>
+//#include <avr/interrupt.h>
+//#include <stdint.h>
 
 #include "Arduino.h"
 #include "BatteryMonitor.h"
 
-static uint8_t currentChannel;
-static uint16_t batteryLevels[3];
-
-void initBatteryMonitor()
+void BatteryMonitor::init()
 {
     pinMode(A0,INPUT);
     pinMode(A1,INPUT);
@@ -29,22 +26,7 @@ void initBatteryMonitor()
     OCR1BL  = 0x20;
 }
 
-uint8_t checkBattery()
-{
-    if(batteryLevels[0] > 750) {
-        return 1;
-    }
-    else {
-        return 0;
-    }
-}
-
-uint16_t *getBatteryLevels()
-{
-    return batteryLevels;
-}
-
-void updateBatteryLevels()
+void BatteryMonitor::update()
 {
     uint16_t value = ADC;
     batteryLevels[currentChannel] = value;
@@ -55,14 +37,22 @@ void updateBatteryLevels()
     ADMUX = currentChannel | (0x40);
 }
 
-void ADC_ISR() {
-    TIFR1 |= _BV(OCF1B); //clear OCF1B interrupt flag
-    TCNT1 = 0;
-    updateBatteryLevels();
-}
-
-ISR(ADC_vect)
+uint8_t BatteryMonitor::check()
 {
-    ADC_ISR();
+    if(batteryLevels[0] > 750) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
+void BatteryMonitor::print()
+{
+    Serial.print(batteryLevels[0], DEC);
+    Serial.print(" ");
+    Serial.print(batteryLevels[1], DEC);
+    Serial.print(" ");
+    Serial.println(batteryLevels[2], DEC);
+
+}

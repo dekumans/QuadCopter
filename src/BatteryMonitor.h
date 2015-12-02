@@ -1,18 +1,18 @@
 #ifndef BATTERY_MONITOR_H
 #define BATTERY_MONITOR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "Arduino.h"
 
-#include <stdint.h>
+class BatteryMonitor {
+    public:
+        void init();
+        void update();
+        uint8_t check();
+        void print();
 
-void initBatteryMonitor();
-uint8_t checkBattery();
-uint16_t *getBatteryLevels();
+    private:
+        uint16_t batteryLevels[3];
+        uint8_t currentChannel;
+};
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /*BatteryMonitor.hpp*/
+#endif /*BatteryMonitor.h */

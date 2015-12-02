@@ -1,81 +1,69 @@
 #include "Arduino.h"
+
 #include "Led.h"
 #include "BatteryMonitor.h"
-#include "Accelerometer.h"
-#include "Magnetometer.h"
+#include "AHRS.h"
 
-Accelerometer accel;
-Magnetometer mag;
-
-void initSensors()
-{
-    if(!accel.init())
-    {
-        /* There was a problem detecting the LSM303 ... check your connections */
-        Serial.println(F("Ooops, no LSM303 (Accel) detected ... Check your wiring!"));
-        while(1);
-    }
-
-    if(!mag.init())
-    {
-        /* There was a problem detecting the LSM303 ... check your connections */
-        Serial.println(F("Ooops, no LSM303 (Mag) detected ... Check your wiring!"));
-        while(1);
-    }
-
-    accel.calibrate();
-    mag.calibrate();
-}
-
-void printBatteryLevels() {
-    uint16_t *levels = getBatteryLevels();
-    Serial.print(levels[0], DEC);
-    Serial.print(" ");
-    Serial.print(levels[1], DEC);
-    Serial.print(" ");
-    Serial.println(levels[2], DEC);
-}
-
-void printMagData() {
-    Serial.print("Mx: ");
-    Serial.print(mag.magData.x, DEC);
-    Serial.print(" My: ");
-    Serial.print(mag.magData.y, DEC);
-    Serial.print(" Mz: ");
-    Serial.println(mag.magData.z, DEC);
-}
-
-void printFilteredData() {
-    Serial.print("Fx: ");
-    Serial.print(accel.x.getMean(), DEC);
-    Serial.print(" Fy: ");
-    Serial.print(accel.y.getMean(), DEC);
-    Serial.print(" Fz: ");
-    Serial.println(accel.z.getMean(), DEC);
-}
+AHRS ahrs;
+BatteryMonitor batteryMonitor;
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("Hello");
 
-    initBatteryMonitor();
+    ahrs.init();
+    batteryMonitor.init();
     initLeds();
-    initSensors();
+
+    /*      Timers init       */
+
+    ///Timer4 updates ahrs
+    ///interrupt every 1ms
+    TCCR4A  = 0x00;
+    TCCR4B  = 0x01; //no prescaler
+    TCCR4C  = 0x00;
+    TIMSK4  = 0x01; //enable timer3 ov interrupt
 }
 
-int i = 0;
+int readSensorDataFlag = 0;
+int updateBatteryLevelsFlag = 0;
+int printCounter = 0;
+int printFlag = 0;
+
 void loop()
 {
-    if (i > 100) {
-        printMagData();
-        i = 0;
+    if (readSensorDataFlag) {
+        readSensorDataFlag = 0;
+        ahrs.readSensorData();
     }
 
-    accel.read();
-    mag.read();
+    if (updateBatteryLevelsFlag) {
+        updateBatteryLevelsFlag = 0;
+        batteryMonitor.update();
+    }
 
-    i++;
-    delay(2);
+    if (printFlag) {
+        printFlag = 0;
+        ahrs.printSensorData(0,0,1);
+    }
 }
 
+ISR(TIMER4_OVF_vect)
+{
+    TCNT4 = 0xC180; //timer to (65536 - 16000) = 49536
+    readSensorDataFlag = 1;
+
+    printCounter++;
+    if (printCounter > 100) {
+        printCounter = 0;
+        printFlag = 1;
+    }
+}
+
+ISR(ADC_vect)
+{
+    TIFR1 |= _BV(OCF1B); //clear OCF1B interrupt flag
+    TCNT1 = 0;
+    updateBatteryLevelsFlag = 1;
+}
