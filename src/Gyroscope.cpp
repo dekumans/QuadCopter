@@ -5,13 +5,15 @@
 #include "Filter.h"
 
 #define ADDRESS_GYRO                    (0x6B)        // 1101011
-#define CALIBRATION_STEPS               100
+#define CALIBRATION_STEPS               40
 #define L3GD20_ID                       0xD4
 #define L3GD20H_ID                      0xD7
 
 #define GYRO_REGISTER_WHO_AM_I          0x0F
 #define GYRO_REGISTER_CTRL_REG1         0x20
+#define GYRO_REGISTER_CTRL_REG2         0x21
 #define GYRO_REGISTER_CTRL_REG4         0x23
+#define GYRO_REGISTER_CTRL_REG5         0x24
 #define GYRO_REGISTER_OUT_X_L           0x28
 
 #define GYRO_SENSITIVITY_2000DPS        0.070f              // Roughly 18/256
@@ -52,9 +54,13 @@ uint8_t Gyroscope::init()
 
     // Enable the gyroscope (380Hz, 25 cut-off)
     write8(GYRO_REGISTER_CTRL_REG1, 0x00);
-    write8(GYRO_REGISTER_CTRL_REG1, 0x0F);
+    write8(GYRO_REGISTER_CTRL_REG1, 0x9F);
+    // High pass settings
+    write8(GYRO_REGISTER_CTRL_REG2, 0x02);
     // +- 2000 dps
     write8(GYRO_REGISTER_CTRL_REG4, 0x20);
+    // Enable High Pass
+    write8(GYRO_REGISTER_CTRL_REG5, 0x10);
 
     return 1;
 }
@@ -108,14 +114,10 @@ void Gyroscope::calibrate()
         cX += gyroData.x;
         cY += gyroData.y;
         cZ += gyroData.z;
-        delay(5);
+        delay(25);
     }
 
     calibrateData.x = cX / CALIBRATION_STEPS;
     calibrateData.y = cY / CALIBRATION_STEPS;
     calibrateData.z = cZ / CALIBRATION_STEPS;
-
-    Serial.println(calibrateData.x, DEC);
-    Serial.println(calibrateData.y, DEC);
-    Serial.println(calibrateData.z, DEC);
 }

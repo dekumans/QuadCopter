@@ -10,7 +10,7 @@ void Filter::addValue(int16_t value)
     }
 }
 
-int16_t Filter::getMean()
+float Filter::getMean()
 {
     uint8_t i;
     int sum = 0;
@@ -19,5 +19,5 @@ int16_t Filter::getMean()
         sum += buffer[i];
     }
 
-    return sum / FILTER_SIZE;
+    return (float) sum / FILTER_SIZE;
 }

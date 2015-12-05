@@ -28,6 +28,8 @@ void setup()
 
 int readSensorDataFlag = 0;
 int updateBatteryLevelsFlag = 0;
+int updateAnglesFlag = 0;
+int updateCounter = 0;
 int printCounter = 0;
 int printFlag = 0;
 
@@ -43,9 +45,15 @@ void loop()
         batteryMonitor.update();
     }
 
+    if (updateAnglesFlag) {
+        updateAnglesFlag = 0;
+        ahrs.updateAngles();
+    }
+
     if (printFlag) {
         printFlag = 0;
-        ahrs.printSensorData(0,0,1);
+        //ahrs.printSensorData(0, 0, 1);
+        ahrs.printAngles();
     }
 }
 
@@ -54,8 +62,14 @@ ISR(TIMER4_OVF_vect)
     TCNT4 = 0xC180; //timer to (65536 - 16000) = 49536
     readSensorDataFlag = 1;
 
+    updateCounter++;
+    if (updateCounter > 9) {
+        updateCounter = 0;
+        updateAnglesFlag = 1;
+    }
+
     printCounter++;
-    if (printCounter > 100) {
+    if (printCounter > 50) {
         printCounter = 0;
         printFlag = 1;
     }

@@ -1,5 +1,14 @@
 #include "Arduino.h"
 
+extern "C" {
+#include "MadgwickAHRS.h"
+}
+
+#define timeStep        0.01f
+#define giroVar         0.1f
+#define deltaGiroVar    0.1f
+#define accelVar        5.0f
+
 #include "AHRS.h"
 
 void AHRS::init()
@@ -26,15 +35,46 @@ void AHRS::init()
     }
 
     accel.calibrate();
-    mag.calibrate();
+    //mag.calibrate();
     gyro.calibrate();
 }
 
 void AHRS::updateAngles()
 {
-    angles.roll = 0;
-    angles.pitch = 0;
-    angles.yaw = 0;
+    //called every 10 ms
+    
+    float aX = accel.x.getMean();
+    float aY = accel.y.getMean();
+    float aZ = accel.z.getMean();
+
+    float gX = gyro.x.getMean();
+    float gY = gyro.y.getMean();
+    
+    accel_angles.pitch = atan2(aY, aZ) * (180.0f / PI);
+    accel_angles.roll = atan2(aX, aZ) * (180.0f / PI);
+    accel_angles.yaw = 0.0f;
+
+    gyro_angles.pitch = gyro_angles.pitch + (gX * 0.07f * timeStep);
+    gyro_angles.roll = gyro_angles.roll - (gY * 0.07f * timeStep);
+    gyro_angles.yaw = 0.0f;
+
+    kalman_angles.pitch = kalman_angles.pitch + (gX * 0.07f * timeStep);
+    kalman_angles.roll = kalman_angles.roll - (gY * 0.07f * timeStep);
+    kalman_angles.yaw = 0.0f;
+
+    Pxx += timeStep * (2 * Pxv + timeStep * Pvv);
+    Pxv += timeStep * Pvv;
+    Pxx += timeStep * giroVar;
+    Pvv += timeStep * deltaGiroVar;
+    kx = Pxx * (1 / (Pxx + accelVar));
+    kv = Pxv * (1 / (Pxx + accelVar));
+
+    kalman_angles.roll += (accel_angles.roll - kalman_angles.roll) * kx;
+    kalman_angles.pitch += (accel_angles.pitch - kalman_angles.pitch) * kx;
+
+    Pxx *= (1 - kx);
+    Pxv *= (1 - kx);
+    Pvv -= kv * Pxv;
 }
 
 void AHRS::readSensorData()
@@ -42,34 +82,48 @@ void AHRS::readSensorData()
     accel.read();
     mag.read();
     gyro.read();
+
+    //MadgwickAHRSupdateIMU(gyro.x.getMean(), gyro.y.getMean(), gyro.z.getMean(),
+    //                   accel.x.getMean(), accel.y.getMean(), accel.z.getMean());
+}
+
+void AHRS::printAngles()
+{
+    Serial.print("Pitch: ");
+    Serial.print(kalman_angles.pitch, 3);
+    Serial.print(", Roll: ");
+    Serial.println(kalman_angles.roll, 3);
+
+    //Serial.print(" Yaw: ");
+    //Serial.println(angles.yaw, 3);
 }
 
 void AHRS::printSensorData(int a, int m, int g)
 {
     if (a != 0) {
         Serial.print("Ax: ");
-        Serial.print(accel.x.getMean(), DEC);
+        Serial.print(accel.x.getMean(), 2);
         Serial.print(" Ay: ");
-        Serial.print(accel.y.getMean(), DEC);
+        Serial.print(accel.y.getMean(), 2);
         Serial.print(" Az: ");
-        Serial.println(accel.z.getMean(), DEC);
+        Serial.println(accel.z.getMean(), 2);
     }
 
     if (m != 0) {
         Serial.print("Mx: ");
-        Serial.print(mag.x.getMean(), DEC);
+        Serial.print(mag.x.getMean(), 2);
         Serial.print(" My: ");
-        Serial.print(mag.y.getMean(), DEC);
+        Serial.print(mag.y.getMean(), 2);
         Serial.print(" Mz: ");
-        Serial.println(mag.z.getMean(), DEC);
+        Serial.println(mag.z.getMean(), 2);
     }
 
     if (g != 0) {
         Serial.print("Gx: ");
-        Serial.print(x, 2);
+        Serial.print(gyro.x.getMean(), 2);
         Serial.print(" Gy: ");
-        Serial.print(y, 2);
+        Serial.print(gyro.y.getMean(), 2);
         Serial.print(" Gz: ");
-        Serial.println(z, 2);
+        Serial.println(gyro.z.getMean(), 2);
     }
 }

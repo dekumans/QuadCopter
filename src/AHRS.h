@@ -15,12 +15,21 @@ class AHRS {
         void init();
         void updateAngles();
         void readSensorData();
+        void printAngles();
         void printSensorData(int a, int m, int g);
 
-        Angles angles;
+        Angles accel_angles;
+        Angles gyro_angles;
+        Angles kalman_angles;
 
     private:
         Accelerometer accel;
         Magnetometer mag;
         Gyroscope gyro;
+
+        float Pxx = 0.1;
+        float Pvv = 0.1;
+        float Pxv = 0.1;
+        float kx;
+        float kv;
 };
