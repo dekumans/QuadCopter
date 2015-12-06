@@ -4,7 +4,6 @@ extern "C" {
 #include "MadgwickAHRS.h"
 }
 
-#define timeStep        0.01f
 #define giroVar         0.1f
 #define deltaGiroVar    0.1f
 #define accelVar        5.0f
@@ -39,16 +38,14 @@ void AHRS::init()
     gyro.calibrate();
 }
 
-void AHRS::updateAngles()
+void AHRS::updateAngles(float timeStep)
 {
-    //called every 10 ms
-    
-    float aX = accel.x.getMean();
-    float aY = accel.y.getMean();
-    float aZ = accel.z.getMean();
+    float aX = accel.x.evaluate();
+    float aY = accel.y.evaluate();
+    float aZ = accel.z.evaluate();
 
-    float gX = gyro.x.getMean();
-    float gY = gyro.y.getMean();
+    float gX = gyro.x.evaluate();
+    float gY = gyro.y.evaluate();
     
     accel_angles.pitch = atan2(aY, aZ) * (180.0f / PI);
     accel_angles.roll = atan2(aX, aZ) * (180.0f / PI);
@@ -102,28 +99,28 @@ void AHRS::printSensorData(int a, int m, int g)
 {
     if (a != 0) {
         Serial.print("Ax: ");
-        Serial.print(accel.x.getMean(), 2);
+        Serial.print(accel.accelData.x, 2);
         Serial.print(" Ay: ");
-        Serial.print(accel.y.getMean(), 2);
+        Serial.print(accel.accelData.y, 2);
         Serial.print(" Az: ");
-        Serial.println(accel.z.getMean(), 2);
+        Serial.println(accel.accelData.z, 2);
     }
 
     if (m != 0) {
         Serial.print("Mx: ");
-        Serial.print(mag.x.getMean(), 2);
+        Serial.print(mag.magData.x, 2);
         Serial.print(" My: ");
-        Serial.print(mag.y.getMean(), 2);
+        Serial.print(mag.magData.y, 2);
         Serial.print(" Mz: ");
-        Serial.println(mag.z.getMean(), 2);
+        Serial.println(mag.magData.z, 2);
     }
 
     if (g != 0) {
         Serial.print("Gx: ");
-        Serial.print(gyro.x.getMean(), 2);
+        Serial.print(gyro.gyroData.x, 2);
         Serial.print(" Gy: ");
-        Serial.print(gyro.y.getMean(), 2);
+        Serial.print(gyro.gyroData.y, 2);
         Serial.print(" Gz: ");
-        Serial.println(gyro.z.getMean(), 2);
+        Serial.println(gyro.gyroData.z, 2);
     }
 }

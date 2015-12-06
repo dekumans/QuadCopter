@@ -3,6 +3,8 @@
 
 #include "Arduino.h"
 
+const uint8_t batteryChannels[3] = { A0, A1, A2 };
+
 class BatteryMonitor {
     public:
         void init();

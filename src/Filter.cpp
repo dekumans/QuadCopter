@@ -3,21 +3,16 @@
 
 void Filter::addValue(int16_t value)
 {
-    buffer[position] = value;
-    position++;
-    if (position > (FILTER_SIZE-1)) {
-        position = 0;
-    }
+    sum += value;
+    sampleCount++;
 }
 
-float Filter::getMean()
+float Filter::evaluate()
 {
-    uint8_t i;
-    int sum = 0;
+    float val = sum / sampleCount;
 
-    for (i = 0; i < FILTER_SIZE; i++) {
-        sum += buffer[i];
-    }
+    sum = 0;
+    sampleCount = 0;
 
-    return (float) sum / FILTER_SIZE;
+    return val;
 }

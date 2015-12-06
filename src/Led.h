@@ -1,20 +1,21 @@
 #ifndef LED_H
 #define LED_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "Arduino.h"
 
-void initLeds();
-void ledOn(const uint8_t led_index);
-void ledOff(const uint8_t led_index);
-void ledToggle(const uint8_t led_index);
-void startBlinking(const uint8_t led_index);
-void stopBlinking(const uint8_t led_index);
-uint8_t isBlinking(const uint8_t led_index);
+class Led
+{
+    public:
+        Led(const uint8_t channel);
 
-#ifdef __cplusplus
-}
-#endif
+        void init();
+        void on();
+        void off();
+        void toggle();
+
+    private:
+        const uint8_t channel;
+        uint8_t state;
+};
 
 #endif /* led.h */

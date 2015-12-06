@@ -13,7 +13,7 @@ struct Angles {
 class AHRS {
     public:
         void init();
-        void updateAngles();
+        void updateAngles(float timeStep);
         void readSensorData();
         void printAngles();
         void printSensorData(int a, int m, int g);

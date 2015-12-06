@@ -1,16 +1,14 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#define FILTER_SIZE 5
-
 class Filter {
     public:
         void addValue(int16_t value);
-        float getMean();
+        float evaluate();
 
     private:
-        int16_t buffer[FILTER_SIZE];
-        uint8_t position;
+        int32_t sum;
+        uint16_t sampleCount;
 };
 
 #endif /* Filter.h */
