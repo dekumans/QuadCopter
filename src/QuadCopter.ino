@@ -3,6 +3,7 @@
 void setup()
 {
     Serial.begin(115200);
+    Serial1.begin(9600);
 
     ahrs.init();
     batteryMonitor.init();
@@ -37,12 +38,8 @@ void loop()
         process100HzTask();
 
         if((frameCounter % 10) == 0) {
-            batteryMonitor.update();
-            batteryMonitor.print();
-
             ahrs.printAngles();
-
-            remote.print();
+            //remote.print();
         }
 
         if((frameCounter % 25) == 0) {

@@ -1,13 +1,4 @@
 #include "Arduino.h"
-
-extern "C" {
-#include "MadgwickAHRS.h"
-}
-
-#define giroVar         0.1f
-#define deltaGiroVar    0.1f
-#define accelVar        5.0f
-
 #include "AHRS.h"
 
 void AHRS::init()
@@ -36,6 +27,99 @@ void AHRS::init()
     accel.calibrate();
     //mag.calibrate();
     gyro.calibrate();
+
+    q0 = 1.0;
+    q1 = 0.0;
+    q2 = 0.0;
+    q3 = 0.0;
+    exInt = 0.0;
+    eyInt = 0.0;
+    ezInt = 0.0;
+
+    previousEx = 0.0;
+    previousEx = 0.0;
+    previousEx = 0.0;
+
+    Kp = 1.5;
+    Ki = 0.005;
+}
+
+void AHRS::argUpdate(float gx, float gy, float gz,
+                     float ax, float ay, float az, float timeStep)
+{
+    float norm;
+    float vx, vy, vz;
+    float q0i, q1i, q2i, q3i;
+    float ex, ey, ez;
+
+    halfT = timeStep/2;
+
+    // normalise the measurements
+    norm = sqrt(ax*ax + ay*ay + az*az);
+    ax = ax / norm;
+    ay = ay / norm;
+    az = az / norm;
+
+    // estimated direction of gravity and flux (v and w)
+    vx = 2*(q1*q3 - q0*q2);
+    vy = 2*(q0*q1 + q2*q3);
+    vz = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+
+    // error is sum of cross product between reference direction of fields and
+    // direction measured by sensors
+    ex = (vy*az - vz*ay);
+    ey = (vz*ax - vx*az);
+    ez = (vx*ay - vy*ax);
+
+    // integral error scaled integral gain
+    exInt = exInt + ex*Ki;
+    if (isSwitched(previousEx,ex)) {
+        exInt = 0.0;
+    }
+    previousEx = ex;
+
+    eyInt = eyInt + ey*Ki;
+    if (isSwitched(previousEy,ey)) {
+        eyInt = 0.0;
+    }
+    previousEy = ey;
+
+    ezInt = ezInt + ez*Ki;
+    if (isSwitched(previousEz,ez)) {
+        ezInt = 0.0;
+    }
+    previousEz = ez;
+
+    // adjusted gyroscope measurements
+    gx = gx + Kp*ex + exInt;
+    gy = gy + Kp*ey + eyInt;
+    gz = gz + Kp*ez + ezInt;
+
+    // integrate quaternion rate and normalise
+    q0i = (-q1*gx - q2*gy - q3*gz) * halfT;
+    q1i = ( q0*gx + q2*gz - q3*gy) * halfT;
+    q2i = ( q0*gy - q1*gz + q3*gx) * halfT;
+    q3i = ( q0*gz + q1*gy - q2*gx) * halfT;
+    q0 += q0i;
+    q1 += q1i;
+    q2 += q2i;
+    q3 += q3i;
+
+    // normalise quaternion
+    norm = sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+    q0 = q0 / norm;
+    q1 = q1 / norm;
+    q2 = q2 / norm;
+    q3 = q3 / norm;
+}
+
+bool AHRS::isSwitched(float previousError, float currentError)
+{
+    if((previousError > 0 && currentError < 0) ||
+        (previousError < 0 && currentError > 0)) {
+        return true;
+    }
+    return false;
 }
 
 void AHRS::updateAngles(float timeStep)
@@ -46,32 +130,21 @@ void AHRS::updateAngles(float timeStep)
 
     float gX = gyro.x.evaluate();
     float gY = gyro.y.evaluate();
-    
-    accel_angles.pitch = atan2(aY, aZ) * (180.0f / PI);
-    accel_angles.roll = atan2(aX, aZ) * (180.0f / PI);
-    accel_angles.yaw = 0.0f;
+    float gZ = gyro.z.evaluate();
 
-    gyro_angles.pitch = gyro_angles.pitch + (gX * 0.07f * timeStep);
-    gyro_angles.roll = gyro_angles.roll - (gY * 0.07f * timeStep);
-    gyro_angles.yaw = 0.0f;
+    gX *= 0.070f * PI / 180.0f;
+    gY *= 0.070f * PI / 180.0f;
+    gZ *= 0.070f * PI / 180.0f;
 
-    kalman_angles.pitch = kalman_angles.pitch + (gX * 0.07f * timeStep);
-    kalman_angles.roll = kalman_angles.roll - (gY * 0.07f * timeStep);
-    kalman_angles.yaw = 0.0f;
+    argUpdate(gX, gY, gZ, -aX, -aY, -aZ, timeStep);
 
-    Pxx += timeStep * (2 * Pxv + timeStep * Pvv);
-    Pxv += timeStep * Pvv;
-    Pxx += timeStep * giroVar;
-    Pvv += timeStep * deltaGiroVar;
-    kx = Pxx * (1 / (Pxx + accelVar));
-    kv = Pxv * (1 / (Pxx + accelVar));
+    angles.pitch = atan2(2 * (q0*q1 + q2*q3), 1 - 2 * (q1*q1 + q2*q2));
+    angles.roll = asin(2 * (q0*q2 - q1*q3));
+    angles.yaw = atan2(2 * (q0*q3 + q1*q2), 1 - 2 * (q2*q2 + q3*q3));
 
-    kalman_angles.roll += (accel_angles.roll - kalman_angles.roll) * kx;
-    kalman_angles.pitch += (accel_angles.pitch - kalman_angles.pitch) * kx;
-
-    Pxx *= (1 - kx);
-    Pxv *= (1 - kx);
-    Pvv -= kv * Pxv;
+    angles.pitch *= 180.0f / PI;
+    angles.roll *= -180.0f / PI;
+    angles.yaw *= 180.0f / PI;
 }
 
 void AHRS::readSensorData()
@@ -79,20 +152,16 @@ void AHRS::readSensorData()
     accel.read();
     mag.read();
     gyro.read();
-
-    //MadgwickAHRSupdateIMU(gyro.x.getMean(), gyro.y.getMean(), gyro.z.getMean(),
-    //                   accel.x.getMean(), accel.y.getMean(), accel.z.getMean());
 }
 
 void AHRS::printAngles()
 {
-    Serial.print("Pitch: ");
-    Serial.print(kalman_angles.pitch, 3);
-    Serial.print(", Roll: ");
-    Serial.println(kalman_angles.roll, 3);
-
-    //Serial.print(" Yaw: ");
-    //Serial.println(angles.yaw, 3);
+    Serial1.print("Pitch: ");
+    Serial1.print(angles.pitch, 3);
+    Serial1.print(", Roll: ");
+    Serial1.print(angles.roll, 3);
+    Serial1.print(", Yaw: ");
+    Serial1.println(angles.yaw, 3);
 }
 
 void AHRS::printSensorData(int a, int m, int g)

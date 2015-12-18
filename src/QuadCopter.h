@@ -8,7 +8,7 @@
 #include "AHRS.h"
 #include "Motors.h"
 
-#define RED_LED_CHANNEL 30
+#define RED_LED_CHANNEL 13
 
 AHRS ahrs;
 BatteryMonitor batteryMonitor;
