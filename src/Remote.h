@@ -27,6 +27,10 @@
 #define MINOFFWIDTH     8000
 #define MAXOFFWIDTH     24000
 
+#define MINCOMMAND      1000
+#define MIDCOMMAND      1500
+#define MAXCOMMAND      2000
+
 struct pinTimingData {
     uint8_t edge;
     uint32_t riseTime;

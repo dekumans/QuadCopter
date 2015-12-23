@@ -2,9 +2,9 @@
 #define FLIGHTCONTROLLER_H
 
 #include "Arduino.h"
+#include "Pilot.h"
 #include "AHRS.h"
 #include "Motors.h"
-#include "Pilot.h"
 #include "PID.h"
 
 class FlightController
@@ -13,6 +13,7 @@ class FlightController
         FlightController(Pilot& pilot);
         void init();
         void process(float timeStep);
+        void zeroIntegralError();
 
         Pilot& pilot;
         AHRS ahrs;
@@ -25,6 +26,7 @@ class FlightController
         PID attitudeRollPID;
 
     private:
+        void limitMotorCommands();
 };
 
 #endif /* FlightController.h */

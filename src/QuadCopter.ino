@@ -27,7 +27,7 @@ void process50HzTask()
     timeStep = (currentTime - fiftyHzPreviousTime) / 1000000.0f;
     fiftyHzPreviousTime = currentTime;
 
-    pilot.update();
+    pilot.update(fc);
 }
 
 void loop()
@@ -42,7 +42,7 @@ void loop()
 
         process100HzTask();
 
-        if((frameCounter % 20) == 0) {
+        if((frameCounter % 2) == 0) {
             process50HzTask();
         }
 

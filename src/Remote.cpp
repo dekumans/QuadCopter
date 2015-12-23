@@ -13,10 +13,10 @@ void Remote::init()
         pinData[i].edge = FALLING_EDGE;
     }
 
-    pinData[THROTTLE].lastGoodWidth = 1000;
-    pinData[PITCH].lastGoodWidth    = 1500;
-    pinData[ROLL].lastGoodWidth     = 1500;
-    pinData[YAW].lastGoodWidth      = 1500;
+    pinData[THROTTLE].lastGoodWidth = MINCOMMAND;
+    pinData[PITCH].lastGoodWidth    = MIDCOMMAND;
+    pinData[ROLL].lastGoodWidth     = MIDCOMMAND;
+    pinData[YAW].lastGoodWidth      = MIDCOMMAND;
 }
 
 void Remote::print()
@@ -36,15 +36,18 @@ uint16_t Remote::getValue(uint8_t channel)
     uint16_t rawValue = pinData[channel].lastGoodWidth;
     SREG = oldSREG;
     
-    if(rawValue < 1000) {
-        return 1000;
+    /*
+    if(rawValue < MINCOMMAND) {
+        return MINCOMMAND;
     }
-    else if(rawValue > 2000) {
-        return 2000;
+    else if(rawValue > MAXCOMMAND) {
+        return MAXCOMMAND;
     }
     else {
         return rawValue;
     }
+    */
+    return rawValue;
 }
 
 void Remote::interrupt()

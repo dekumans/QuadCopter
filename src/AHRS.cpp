@@ -23,9 +23,7 @@ void AHRS::init()
         while(1);
     }
 
-    accel.calibrate();
-    //mag.calibrate();
-    gyro.calibrate();
+    calibrate();
 
     q0 = 1.0;
     q1 = 0.0;
@@ -41,6 +39,14 @@ void AHRS::init()
 
     Kp = 1.5;
     Ki = 0.005;
+}
+
+void AHRS::calibrate()
+{
+    accel.calibrate();
+    //mag.calibrate();
+    gyro.calibrate();
+
 }
 
 void AHRS::argUpdate(float gx, float gy, float gz,

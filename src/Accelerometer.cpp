@@ -91,6 +91,10 @@ void Accelerometer::read()
 
 void Accelerometer::calibrate()
 {
+    calibrateData.x = 0;
+    calibrateData.y = 0;
+    calibrateData.z = 0;
+
     delay(100);
 
     int i;

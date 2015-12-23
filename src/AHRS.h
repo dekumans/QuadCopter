@@ -22,6 +22,7 @@ struct Angles {
 class AHRS {
     public:
         void init();
+        void calibrate();
         void updateAngles(float timeStep);
         void readSensorData();
         void printAngles();

@@ -36,15 +36,26 @@ void Telemetry::update()
             break;
         case 'C':
             receivePIDfactors();
+            fc.rateYawPID.setPIDfactors(P, I, D);
+            fc.rateYawPID.printPIDfactors();
+            break;
+        case 'D':
+            receivePIDfactors();
             fc.attitudePitchPID.setPIDfactors(P, I, D);
             fc.attitudePitchPID.printPIDfactors();
             break;
-        case 'D':
+        case 'E':
+            receivePIDfactors();
+            fc.attitudeRollPID.setPIDfactors(P, I, D);
+            fc.attitudeRollPID.printPIDfactors();
+            break;
+        case 'F':
             receiveValue = receiveFloat();
             fc.attitudePitchPID.setRampValue(receiveValue);
             fc.attitudeRollPID.setRampValue(receiveValue);
             fc.ratePitchPID.setRampValue(receiveValue);
             fc.rateRollPID.setRampValue(receiveValue);
+            fc.rateYawPID.setRampValue(receiveValue);
             break;
         default:
             break;

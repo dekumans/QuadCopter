@@ -4,9 +4,13 @@
 #include "Arduino.h"
 #include "Remote.h"
 
-#define SMOOTH_FACTOR   0.15f
-#define REMOTE_FACTOR   0.1f
-#define GYRO_FACTOR     0.001f
+#define SMOOTH_FACTOR       0.2f
+
+#define MINCHECK            ((MINCOMMAND + 100.0) - MIDCOMMAND)
+#define MAXCHECK            ((MAXCOMMAND - 100.0) - MIDCOMMAND)
+#define MINTHROTTLE         (MINCOMMAND + 100.0)
+#define MAXTHROTTLE         (MAXCOMMAND)
+#define MINARMEDTHROTTLE    1150.0
 
 typedef struct pilotCommands_t {
     float throttle;
@@ -15,17 +19,27 @@ typedef struct pilotCommands_t {
     float yaw;
 } pilotCommands;
 
+class FlightController;
+
 class Pilot
 {
     public:
         Pilot(Remote& remote);
         void init();
-        void update();
+        void update(FlightController& fc);
 
         Remote& remote;
+
         pilotCommands commands;
+        bool motorArmed;
+        bool inFlight;
+        bool safetyCheck;
 
     private:
+        void updateCommands();
+        void processZeroThrottle(FlightController& fc);
+        void pulseMotors(FlightController& fc, uint8_t nPulses);
+
         pilotCommands previousCommands;
 
 };

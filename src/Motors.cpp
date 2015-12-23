@@ -15,6 +15,11 @@ void Motors::command()
 
 void Motors::commandAll(uint16_t command)
 {
+    motorCommand[MOTOR_FR] = command;
+    motorCommand[MOTOR_FL] = command;
+    motorCommand[MOTOR_RR] = command;
+    motorCommand[MOTOR_RL] = command;
+
     analogWrite(MOTORPIN0, command / 8);
     analogWrite(MOTORPIN1, command / 8);
     analogWrite(MOTORPIN2, command / 8);
