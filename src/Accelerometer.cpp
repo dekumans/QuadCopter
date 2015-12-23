@@ -1,8 +1,4 @@
-#include <Wire.h>
-
-#include "Arduino.h"
 #include "Accelerometer.h"
-#include "Filter.h"
 
 #define ADDRESS_ACCEL                   (0x32 >> 1)         // 0011001x
 #define CALIBRATION_STEPS               50
@@ -54,6 +50,10 @@ uint8_t Accelerometer::init()
         return 0;
     }
     return 1;
+
+    x.init(0.0, 0.0);
+    y.init(0.0, 0.0);
+    z.init(-500.0, -500.0);
 }
 
 void Accelerometer::read()

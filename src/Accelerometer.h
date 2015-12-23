@@ -1,6 +1,8 @@
 #ifndef ACCELEROMETER_H
 #define ACCELEROMETER_H
 
+#include <Wire.h>
+
 #include "Arduino.h"
 #include "Filter.h"
 

@@ -1,6 +1,8 @@
 #ifndef GYROSCOPE_H
 #define GYROSCOPE_H
 
+#include <Wire.h>
+
 #include "Arduino.h"
 #include "Filter.h"
 

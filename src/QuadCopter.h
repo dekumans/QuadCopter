@@ -2,19 +2,21 @@
 #define QUADCOPTER_H
 
 #include "Arduino.h"
+#include "Remote.h"
+#include "Pilot.h"
+#include "FlightController.h"
+#include "Telemetry.h"
 #include "Led.h"
 #include "BatteryMonitor.h"
-#include "Remote.h"
-#include "AHRS.h"
-#include "Motors.h"
 
 #define RED_LED_CHANNEL 13
 
-AHRS ahrs;
-BatteryMonitor batteryMonitor;
 Remote remote;
-Motors motors;
+Pilot pilot(remote);
+FlightController fc(pilot);
+Telemetry telemetry(fc);
 Led led(RED_LED_CHANNEL);
+BatteryMonitor batteryMonitor;
 
 float timeStep;
 
@@ -23,6 +25,7 @@ uint32_t previousTime;
 uint32_t deltaTime;
 
 uint32_t hundredHzPreviousTime;
+uint32_t fiftyHzPreviousTime;
 
 uint8_t frameCounter;
 

@@ -6,14 +6,19 @@
 
 #define CHANNELS 4
 
-#define THROTTLE    A8
-#define PITCH       A9
-#define ROLL        A10
-#define YAW         A11
-#define AUX1        A12
-#define AUX2        A13
-#define AUX3        A14
-#define AUX4        A15
+#define THROTTLE_PIN    A8
+#define PITCH_PIN       A9
+#define ROLL_PIN        A10
+#define YAW_PIN         A11
+#define AUX1_PIN        A12
+#define AUX2_PIN        A13
+#define AUX3_PIN        A14
+#define AUX4_PIN        A15
+
+#define THROTTLE        0
+#define PITCH           1
+#define ROLL            2
+#define YAW             3
 
 #define FALLING_EDGE    0
 #define RISING_EDGE     1
@@ -32,7 +37,7 @@ struct pinTimingData {
 //const uint8_t channels[CHANNELS] = { THROTTLE, PITCH, ROLL, YAW,
 //                                     AUX1, AUX2, AUX3, AUX4 };
 
-const uint8_t channels[CHANNELS] = { THROTTLE, PITCH, ROLL, YAW };
+const uint8_t channels[CHANNELS] = { THROTTLE_PIN, PITCH_PIN, ROLL_PIN, YAW_PIN };
 
 class Remote
 {

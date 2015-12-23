@@ -1,8 +1,4 @@
-#include <Wire.h>
-
-#include "Arduino.h"
 #include "Gyroscope.h"
-#include "Filter.h"
 
 #define ADDRESS_GYRO                    (0x6B)        // 1101011
 #define CALIBRATION_STEPS               40

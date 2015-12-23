@@ -1,5 +1,3 @@
-#include "Arduino.h"
-
 #include "Remote.h"
 
 void Remote::init()
@@ -14,17 +12,21 @@ void Remote::init()
     for(uint8_t i = 0; i < CHANNELS; i++) {
         pinData[i].edge = FALLING_EDGE;
     }
+
+    pinData[THROTTLE].lastGoodWidth = 1000;
+    pinData[PITCH].lastGoodWidth    = 1500;
+    pinData[ROLL].lastGoodWidth     = 1500;
+    pinData[YAW].lastGoodWidth      = 1500;
 }
 
 void Remote::print()
 {
+    Serial1.print("Remote;");
     for(int i = 0; i < CHANNELS; ++i) {
-        Serial.print(i, DEC);
-        Serial.print(". ");
-        Serial.print(getValue(i), DEC);
-        Serial.print("   ");
+        Serial1.print(getValue(i), DEC);
+        Serial1.print(";");
     }
-    Serial.println("");
+    Serial1.println("");
 }
 
 uint16_t Remote::getValue(uint8_t channel)

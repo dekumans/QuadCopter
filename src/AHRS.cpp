@@ -1,4 +1,3 @@
-#include "Arduino.h"
 #include "AHRS.h"
 
 void AHRS::init()
@@ -128,6 +127,10 @@ void AHRS::updateAngles(float timeStep)
     float aY = accel.y.evaluate();
     float aZ = accel.z.evaluate();
 
+    aX = accel.x.computeFilter(aX);
+    aY = accel.y.computeFilter(aY);
+    aZ = accel.z.computeFilter(aZ);
+
     float gX = gyro.x.evaluate();
     float gY = gyro.y.evaluate();
     float gZ = gyro.z.evaluate();
@@ -135,6 +138,10 @@ void AHRS::updateAngles(float timeStep)
     gX *= 0.070f * PI / 180.0f;
     gY *= 0.070f * PI / 180.0f;
     gZ *= 0.070f * PI / 180.0f;
+
+    gyro.x.lastValue = gX;
+    gyro.y.lastValue = gY;
+    gyro.z.lastValue = gZ;
 
     argUpdate(gX, gY, gZ, -aX, -aY, -aZ, timeStep);
 
@@ -156,12 +163,13 @@ void AHRS::readSensorData()
 
 void AHRS::printAngles()
 {
-    Serial1.print("Pitch: ");
-    Serial1.print(angles.pitch, 3);
-    Serial1.print(", Roll: ");
-    Serial1.print(angles.roll, 3);
-    Serial1.print(", Yaw: ");
-    Serial1.println(angles.yaw, 3);
+    Serial1.print("Angles");
+    Serial1.print(";");
+    Serial1.print(angles.pitch, 4);
+    Serial1.print(";");
+    Serial1.print(angles.roll, 4);
+    Serial1.print(";");
+    Serial1.println(angles.yaw, 4);
 }
 
 void AHRS::printSensorData(int a, int m, int g)
