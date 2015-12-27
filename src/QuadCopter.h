@@ -26,6 +26,8 @@ uint32_t deltaTime;
 
 uint32_t hundredHzPreviousTime;
 uint32_t fiftyHzPreviousTime;
+uint32_t tenHzPreviousTime;
+uint32_t lowPriorityTenHzPreviousTime;
 
 uint8_t frameCounter;
 

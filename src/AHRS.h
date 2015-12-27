@@ -5,6 +5,7 @@
 #include "Accelerometer.h"
 #include "Magnetometer.h"
 #include "Gyroscope.h"
+#include "Heading.h"
 
 #define G_PITCH   0
 #define G_ROLL    1
@@ -23,18 +24,19 @@ class AHRS {
     public:
         void init();
         void calibrate();
+        void readCriticalSensors();
         void updateAngles(float timeStep);
-        void readSensorData();
+        void calculateHeading(float timeStep);
+
         void printAngles();
         void printSensorData(int a, int m, int g);
 
+        Accelerometer accel;
         Gyroscope gyro;
+        Heading hdg;
         Angles angles;
 
     private:
-        Accelerometer accel;
-        Magnetometer mag;
-
         void argUpdate(float gx, float gy, float gz,
                        float ax, float ay, float az, float timeStep);
 

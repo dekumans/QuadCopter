@@ -78,7 +78,6 @@ void Pilot::processZeroThrottle(FlightController& fc)
     }
 
     if (commands.yaw > MINCHECK) {
-        Serial.println(commands.yaw, 0);
         safetyCheck = true;
     }
 }

@@ -24,9 +24,16 @@ class FlightController
         PID rateYawPID;
         PID attitudePitchPID;
         PID attitudeRollPID;
+        PID headingHoldPID;
 
     private:
         void limitMotorCommands();
+        float processHeading(float timeStep);
+
+        float setHeading;
+        float headingHold;
+        bool headingHoldState;
+        float headingTime;
 };
 
 #endif /* FlightController.h */

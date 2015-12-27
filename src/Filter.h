@@ -16,6 +16,7 @@ class Filter {
         float computeFilter(float input);
 
         float lastValue;
+        float lastFValue;
 
     private:
         int32_t sum;

@@ -30,12 +30,21 @@ void process50HzTask()
     pilot.update(fc);
 }
 
+void process10HzTask()
+{
+    timeStep = (currentTime - tenHzPreviousTime) / 1000000.0f;
+    tenHzPreviousTime = currentTime;
+
+    fc.ahrs.calculateHeading(timeStep);
+    //fc.ahrs.hdg.printAngles();
+}
+
 void loop()
 {
     currentTime = micros();
     deltaTime = currentTime - previousTime;
 
-    fc.ahrs.readSensorData();
+    fc.ahrs.readCriticalSensors();
 
     if(deltaTime > 10000) {
         frameCounter++;
@@ -47,7 +56,10 @@ void loop()
         }
 
         if((frameCounter % 10) == 0) {
-            // TODO:: calculate heading
+            process10HzTask();
+        }
+        else if((currentTime - lowPriorityTenHzPreviousTime) > 100000) {
+            lowPriorityTenHzPreviousTime = currentTime;
             telemetry.update();
         }
 

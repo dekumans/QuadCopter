@@ -9,13 +9,6 @@ void AHRS::init()
         while(1);
     }
 
-    if(!mag.init())
-    {
-        /* There was a problem detecting the LSM303 ... check your connections */
-        Serial.println(F("Ooops, no LSM303 (Mag) detected ... Check your wiring!"));
-        while(1);
-    }
-
     if(!gyro.init())
     {
         /* There was a problem detecting the L3DH20 ... check your connections */
@@ -39,14 +32,18 @@ void AHRS::init()
 
     Kp = 1.5;
     Ki = 0.005;
+
+    angles.pitch = 0.0;
+    angles.roll = 0.0;
+    angles.yaw = 0.0;
+
+    hdg.init();
 }
 
 void AHRS::calibrate()
 {
     accel.calibrate();
-    //mag.calibrate();
     gyro.calibrate();
-
 }
 
 void AHRS::argUpdate(float gx, float gy, float gz,
@@ -153,17 +150,24 @@ void AHRS::updateAngles(float timeStep)
 
     angles.pitch = atan2(2 * (q0*q1 + q2*q3), 1 - 2 * (q1*q1 + q2*q2));
     angles.roll = asin(2 * (q0*q2 - q1*q3));
-    angles.yaw = atan2(2 * (q0*q3 + q1*q2), 1 - 2 * (q2*q2 + q3*q3));
+    //angles.yaw = atan2(2 * (q0*q3 + q1*q2), 1 - 2 * (q2*q2 + q3*q3));
 
     angles.pitch *= 180.0f / PI;
     angles.roll *= -180.0f / PI;
-    angles.yaw *= 180.0f / PI;
+    //angles.yaw *= -180.0f / PI;
+
 }
 
-void AHRS::readSensorData()
+void AHRS::calculateHeading(float timeStep)
+{
+    hdg.measure(angles.roll, angles.pitch);
+    hdg.calculate(gyro.x.lastValue, gyro.y.lastValue, gyro.z.lastValue,
+                  -accel.x.lastFValue, -accel.y.lastFValue, -accel.z.lastFValue, timeStep);
+}
+
+void AHRS::readCriticalSensors()
 {
     accel.read();
-    mag.read();
     gyro.read();
 }
 
@@ -174,8 +178,13 @@ void AHRS::printAngles()
     Serial1.print(angles.pitch, 4);
     Serial1.print(";");
     Serial1.print(angles.roll, 4);
+
+    float yaw = hdg.trueNorthHeading - (PI / 2);
+    if (yaw < 0) {
+        yaw = (2.0 * PI) + yaw;
+    }
     Serial1.print(";");
-    Serial1.println(angles.yaw, 4);
+    Serial1.println(yaw * 180.0 / PI, 4);
 }
 
 void AHRS::printSensorData(int a, int m, int g)
@@ -190,12 +199,7 @@ void AHRS::printSensorData(int a, int m, int g)
     }
 
     if (m != 0) {
-        Serial.print("Mx: ");
-        Serial.print(mag.magData.x, 2);
-        Serial.print(" My: ");
-        Serial.print(mag.magData.y, 2);
-        Serial.print(" Mz: ");
-        Serial.println(mag.magData.z, 2);
+        hdg.printMagData();
     }
 
     if (g != 0) {

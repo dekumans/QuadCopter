@@ -65,6 +65,8 @@ float Filter::computeFilter(float input)
     filterData.outputTm3 = filterData.outputTm2;
     filterData.outputTm2 = filterData.outputTm1;
     filterData.outputTm1 = output;
+
+    lastFValue = output;
     
     return output;
 }

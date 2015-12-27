@@ -17,7 +17,7 @@ void Telemetry::update()
 
     fc.ahrs.printAngles();
     fc.motors.printMotorCommands();
-    fc.pilot.remote.print();
+    //fc.pilot.remote.print();
 
     if (Serial1.available() > 0) {
         c = Serial1.read();
@@ -50,12 +50,18 @@ void Telemetry::update()
             fc.attitudeRollPID.printPIDfactors();
             break;
         case 'F':
+            receivePIDfactors();
+            fc.headingHoldPID.setPIDfactors(P, I, D);
+            fc.headingHoldPID.printPIDfactors();
+            break;
+        case 'G':
             receiveValue = receiveFloat();
             fc.attitudePitchPID.setRampValue(receiveValue);
             fc.attitudeRollPID.setRampValue(receiveValue);
             fc.ratePitchPID.setRampValue(receiveValue);
             fc.rateRollPID.setRampValue(receiveValue);
             fc.rateYawPID.setRampValue(receiveValue);
+            fc.headingHoldPID.setRampValue(receiveValue);
             break;
         default:
             break;
